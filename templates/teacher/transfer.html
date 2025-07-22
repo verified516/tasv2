@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-exchange-alt me-2"></i>Request Substitution Transfer</h2>
+            <a href="{{ url_for('teacher_routes.dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0"><i class="fas fa-sync-alt me-2"></i>Transfer Substitution Assignment</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex">
+                        <i class="fas fa-info-circle fa-2x me-3"></i>
+                        <div>
+                            <h5 class="alert-heading">Substitution Details</h5>
+                            <p class="mb-0">You are currently assigned to substitute for <strong>{{ substitution.original_teacher.name }}</strong> 
+                               in <strong>Class {{ substitution.class_name }} {{ substitution.section }}</strong> 
+                               during <strong>Period {{ substitution.period }}</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="POST" action="{{ url_for('teacher_routes.request_transfer', substitution_id=substitution.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-4">
+                        <label for="reason" class="form-label fw-bold">Reason for Transfer Request (Required)</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="4" required></textarea>
+                        <div class="form-text">Please provide a valid reason why you cannot take this substitution.</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="new_teacher_id" class="form-label fw-bold">Select New Teacher</label>
+                        <select class="form-select" id="new_teacher_id" name="new_teacher_id" required>
+                            <option value="">-- Select Teacher --</option>
+                            {% for teacher in teachers %}
+                                <option value="{{ teacher.id }}">{{ teacher.name }} (ID: {{ teacher.teacher_id }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="transfer_all" name="transfer_all">
+                            <label class="form-check-label" for="transfer_all">
+                                Transfer all my substitution duties for today
+                            </label>
+                        </div>
+                        <div class="form-text">If checked, all your substitutions for today will be transferred to the selected teacher.</div>
+                    </div>
+                    
+                    <div class="text-end">
+                        <a href="{{ url_for('teacher_routes.dashboard') }}" class="btn btn-secondary me-2">Cancel</a>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-paper-plane me-1"></i> Submit Transfer Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer bg-light">
+                <p class="text-muted mb-0"><small>
+                    <i class="fas fa-info-circle me-1"></i> Your transfer request will be sent to the administrator for approval.
+                    You will still be responsible for the substitution until it's approved.
+                </small></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

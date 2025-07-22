@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-history me-2"></i>History & Logs</h2>
+            <a href="{{ url_for('admin_routes.dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark">
+        <ul class="nav nav-tabs card-header-tabs" id="historyTabs">
+            <li class="nav-item">
+                <a class="nav-link active" id="absences-tab" data-bs-toggle="tab" href="#absences">
+                    <i class="fas fa-user-minus me-1"></i> Absences
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="substitutions-tab" data-bs-toggle="tab" href="#substitutions">
+                    <i class="fas fa-exchange-alt me-1"></i> Substitutions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="transfers-tab" data-bs-toggle="tab" href="#transfers">
+                    <i class="fas fa-sync-alt me-1"></i> Transfer Requests
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-0">
+        <div class="tab-content" id="historyTabContent">
+            <!-- Absences Tab -->
+            <div class="tab-pane fade show active" id="absences" role="tabpanel">
+                <div class="p-3">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control history-search" data-target="absences-table" placeholder="Search by teacher name, date...">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover history-table" id="absences-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Day</th>
+                                <th>Teacher</th>
+                                <th>Reported By</th>
+                                <th>Created At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for absence in absences %}
+                                <tr>
+                                    <td>{{ absence.date }}</td>
+                                    <td>{{ absence.day }}</td>
+                                    <td>{{ absence.teacher.name }}</td>
+                                    <td>
+                                        {% if absence.reported_by == 'self' %}
+                                            <span class="badge bg-info">Self-reported</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">Admin</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ absence.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Substitutions Tab -->
+            <div class="tab-pane fade" id="substitutions" role="tabpanel">
+                <div class="p-3">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control history-search" data-target="substitutions-table" placeholder="Search by teacher name, class...">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover history-table" id="substitutions-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Period</th>
+                                <th>Original Teacher</th>
+                                <th>Substitute Teacher</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for sub in substitutions %}
+                                <tr>
+                                    <td>{{ sub.date }}</td>
+                                    <td>{{ sub.period }}</td>
+                                    <td>{{ sub.original_teacher.name }}</td>
+                                    <td>{{ sub.substitute_teacher.name }}</td>
+                                    <td>{{ sub.class_name }}</td>
+                                    <td>{{ sub.section }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Transfers Tab -->
+            <div class="tab-pane fade" id="transfers" role="tabpanel">
+                <div class="p-3">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control history-search" data-target="transfers-table" placeholder="Search by teacher name, status...">
+                    </div>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover history-table" id="transfers-table">
+                        <thead>
+                            <tr>
+                                <th>Request Date</th>
+                                <th>From Teacher</th>
+                                <th>To Teacher</th>
+                                <th>Reason</th>
+                                <th>Status</th>
+                                <th>Action Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transfer in transfers %}
+                                <tr>
+                                    <td>{{ transfer.request_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>{{ transfer.original_teacher.name }}</td>
+                                    <td>{{ transfer.new_teacher.name }}</td>
+                                    <td>{{ transfer.reason }}</td>
+                                    <td>
+                                        {% if transfer.status == 'pending' %}
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                        {% elif transfer.status == 'approved' %}
+                                            <span class="badge bg-success">Approved</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Rejected</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if transfer.action_date %}
+                                            {{ transfer.action_date.strftime('%Y-%m-%d %H:%M') }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Search functionality for history tables
+        const searchInputs = document.querySelectorAll('.history-search');
+        
+        searchInputs.forEach(input => {
+            input.addEventListener('keyup', function() {
+                const searchTerm = this.value.toLowerCase();
+                const targetTable = this.getAttribute('data-target');
+                const rows = document.querySelectorAll(`#${targetTable} tbody tr`);
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-sync-alt me-2"></i>Transfer Requests</h2>
+            <a href="{{ url_for('admin_routes.dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="card shadow">
+    <div class="card-header bg-dark">
+        <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Pending Transfer Requests</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if transfers %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Request Date</th>
+                            <th>Original Teacher</th>
+                            <th>New Teacher</th>
+                            <th>Date</th>
+                            <th>Period</th>
+                            <th>Class</th>
+                            <th>Reason</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for transfer in transfers %}
+                            <tr>
+                                <td>{{ transfer.request_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ transfer.original_teacher.name }}</td>
+                                <td>{{ transfer.new_teacher.name }}</td>
+                                <td>{{ transfer.substitution.date }}</td>
+                                <td>{{ transfer.substitution.period }}</td>
+                                <td>
+                                    {{ transfer.substitution.class_name }}
+                                    {% if transfer.substitution.section %}
+                                        {{ transfer.substitution.section }}
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-info view-reason" 
+                                            data-bs-toggle="popover" 
+                                            data-bs-placement="left" 
+                                            data-bs-content="{{ transfer.reason }}">
+                                        <i class="fas fa-eye me-1"></i> View
+                                    </button>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <button class="btn btn-success btn-sm approve-transfer" data-id="{{ transfer.id }}">
+                                            <i class="fas fa-check me-1"></i> Approve
+                                        </button>
+                                        <button class="btn btn-danger btn-sm reject-transfer" data-id="{{ transfer.id }}">
+                                            <i class="fas fa-times me-1"></i> Reject
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="alert alert-info m-3">
+                <i class="fas fa-info-circle me-2"></i>
+                No pending transfer requests at this time.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Transfer Details Modal -->
+<div class="modal fade" id="transferDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Transfer Request Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="transferDetailsBody">
+                <!-- Content will be populated dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/transfer.js') }}?v={{ request.args.get('v', 0) }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize popovers for viewing reasons
+        const reasonButtons = document.querySelectorAll('.view-reason');
+        reasonButtons.forEach(button => {
+            const popover = new bootstrap.Popover(button, {
+                html: true,
+                trigger: 'focus'
+            });
+        });
+        
+        // View detailed transfer request
+        const viewButtons = document.querySelectorAll('.view-details');
+        if (viewButtons.length > 0) {
+            viewButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const requestId = this.getAttribute('data-id');
+                    
+                    // In a production app, this would fetch from server
+                    // For now, we'll populate with data from the row
+                    const row = this.closest('tr');
+                    const originalTeacher = row.cells[1].textContent;
+                    const newTeacher = row.cells[2].textContent;
+                    const date = row.cells[3].textContent;
+                    const period = row.cells[4].textContent;
+                    const classInfo = row.cells[5].textContent;
+                    
+                    // Get the reason text from the popover
+                    const reasonBtn = row.querySelector('.view-reason');
+                    const reason = reasonBtn.getAttribute('data-bs-content');
+                    
+                    const modalBody = document.getElementById('transferDetailsBody');
+                    modalBody.innerHTML = `
+                        <div class="mb-3">
+                            <h6 class="fw-bold">Original Teacher</h6>
+                            <p>${originalTeacher}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="fw-bold">New Teacher</h6>
+                            <p>${newTeacher}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="fw-bold">Date</h6>
+                            <p>${date}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="fw-bold">Period</h6>
+                            <p>${period}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="fw-bold">Class</h6>
+                            <p>${classInfo}</p>
+                        </div>
+                        <div class="mb-3">
+                            <h6 class="fw-bold">Reason</h6>
+                            <p>${reason}</p>
+                        </div>
+                    `;
+                    
+                    const modal = new bootstrap.Modal(document.getElementById('transferDetailsModal'));
+                    modal.show();
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

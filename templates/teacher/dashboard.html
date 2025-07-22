@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-tachometer-alt me-2"></i>Teacher Dashboard</h2>
+            <div>
+                <span class="badge bg-primary fs-6 me-2">{{ today }} ({{ day }})</span>
+                {% if not is_absent %}
+                    <button id="markAbsentBtn" class="btn btn-danger">
+                        <i class="fas fa-user-minus me-1"></i> Mark Myself Absent
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+        <hr>
+    </div>
+</div>
+
+{% if is_absent %}
+<div class="alert alert-danger mb-4">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-circle fa-2x me-3"></i>
+        <div>
+            <h4 class="alert-heading mb-1">You are marked absent today</h4>
+            <p class="mb-0">Your classes have been assigned to other teachers for substitution.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Today's Schedule -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Today's Schedule</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-center">Period</th>
+                                <th>Class</th>
+                                <th>Section</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if schedule %}
+                                {% for period in schedule %}
+                                    <tr>
+                                        <td class="text-center">{{ period.period }}</td>
+                                        <td>{{ period.class_name }}</td>
+                                        <td>{{ period.section }}</td>
+                                        <td>
+                                            {% if period.is_free %}
+                                                <span class="badge bg-info text-dark">Free Period</span>
+                                            {% else %}
+                                                <span class="badge bg-success">Regular Class</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">
+                                        No schedule found for today
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Assigned Substitutions -->
+        <div class="card shadow">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i>Assigned Substitutions</h5>
+            </div>
+            <div class="card-body p-0">
+                {% if substitutions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Period</th>
+                                    <th>Original Teacher</th>
+                                    <th>Class</th>
+                                    <th>Section</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in substitutions %}
+                                    <tr>
+                                        <td class="text-center">{{ sub.period }}</td>
+                                        <td>{{ sub.original_teacher.name }}</td>
+                                        <td>{{ sub.class_name }}</td>
+                                        <td>{{ sub.section }}</td>
+                                        <td>
+                                            <a href="{{ url_for('teacher_routes.request_transfer', substitution_id=sub.id) }}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-exchange-alt me-1"></i> Transfer
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info m-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You have no substitution duties assigned for today.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Teacher Info Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-user me-2"></i>Teacher Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-4">
+                    <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                    <h4>{{ teacher.name }}</h4>
+                    <p class="text-muted mb-0">ID: {{ teacher.teacher_id }}</p>
+                </div>
+                
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-envelope me-2"></i> Email</span>
+                        <span>{{ teacher.email }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-phone me-2"></i> Phone</span>
+                        <span>{{ teacher.phone }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><i class="fas fa-calendar-alt me-2"></i> Status Today</span>
+                        <span>
+                            {% if is_absent %}
+                                <span class="badge bg-danger">Absent</span>
+                            {% else %}
+                                <span class="badge bg-success">Present</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <!-- Quick Links Card -->
+        <div class="card shadow">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-link me-2"></i>Quick Links</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <a href="{{ url_for('teacher_routes.view_schedule') }}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar-alt me-2"></i> View Full Schedule
+                    </a>
+                    {% if substitutions %}
+                        <a href="#" class="list-group-item list-group-item-action" id="printSubstitutionsBtn">
+                            <i class="fas fa-print me-2"></i> Print Substitution Details
+                        </a>
+                    {% endif %}
+                    <a href="{{ url_for('auth_routes.logout') }}" class="list-group-item list-group-item-action text-danger">
+                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mark Absent button functionality
+        const markAbsentBtn = document.getElementById('markAbsentBtn');
+        if (markAbsentBtn) {
+            markAbsentBtn.addEventListener('click', function() {
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You're about to mark yourself absent for today.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, mark me absent'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Send AJAX request to mark teacher absent
+                        fetch('{{ url_for("teacher_routes.mark_absent") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({})
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire(
+                                    'Marked Absent!',
+                                    'You have been marked absent for today.',
+                                    'success'
+                                ).then(() => {
+                                    // Reload page to update UI
+                                    window.location.reload();
+                                });
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    data.message || 'Failed to mark absent.',
+                                    'error'
+                                );
+                            }
+                        });
+                    }
+                });
+            });
+        }
+        
+        // Print Substitutions button functionality
+        const printSubstitutionsBtn = document.getElementById('printSubstitutionsBtn');
+        if (printSubstitutionsBtn) {
+            printSubstitutionsBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Generate PDF with substitution details
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Add title and date
+                doc.setFontSize(18);
+                doc.text('Substitution Details', 14, 22);
+                
+                doc.setFontSize(12);
+                doc.text('Teacher: {{ teacher.name }} (ID: {{ teacher.teacher_id }})', 14, 32);
+                doc.text('Date: {{ today }}', 14, 40);
+                
+                // Create table for substitutions
+                const substitutionData = [
+                    ['Period', 'Original Teacher', 'Class', 'Section'],
+                    {% for sub in substitutions %}
+                        ['{{ sub.period }}', '{{ sub.original_teacher.name }}', '{{ sub.class_name }}', '{{ sub.section }}'],
+                    {% endfor %}
+                ];
+                
+                doc.autoTable({
+                    startY: 50,
+                    head: [substitutionData[0]],
+                    body: substitutionData.slice(1)
+                });
+                
+                // Save the PDF
+                doc.save('substitution_details_{{ today }}.pdf');
+            });
+        }
+    });
+</script>
+{% endblock %}

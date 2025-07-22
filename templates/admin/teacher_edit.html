@@ -1,0 +1,256 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>
+                {% if teacher %}
+                    <i class="fas fa-edit me-2"></i>Edit Teacher
+                {% else %}
+                    <i class="fas fa-user-plus me-2"></i>Add New Teacher
+                {% endif %}
+            </h2>
+            <a href="{{ url_for('admin_routes.teachers') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-1"></i> Back to Teachers
+            </a>
+        </div>
+        <hr>
+    </div>
+</div>
+
+{% if teacher and request.path.endswith('/schedule/' ~ teacher.id) %}
+<!-- Schedule Form -->
+<div class="card shadow">
+    <div class="card-header bg-dark">
+        <h5 class="mb-0"><i class="fas fa-calendar-alt me-2"></i>{{ teacher.name }}'s Schedule</h5>
+    </div>
+    <div class="card-body">
+        <form id="scheduleForm" method="POST" action="{{ url_for('admin_routes.edit_schedule', teacher_id=teacher.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="routine_data" id="routineData">
+
+            <ul class="nav nav-tabs mb-3" id="scheduleTabs" role="tablist">
+                {% for day in days %}
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if loop.first %}active{% endif %}" 
+                            id="{{ day.lower().replace(' ', '-') }}-tab" 
+                            data-bs-toggle="tab" 
+                            data-bs-target="#{{ day.lower().replace(' ', '-') }}" 
+                            type="button" 
+                            role="tab">
+                        {{ day }}
+                    </button>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <div class="tab-content" id="scheduleTabContent">
+                {% for day in days %}
+                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                     id="{{ day.lower().replace(' ', '-') }}" 
+                     role="tabpanel">
+
+                    <h5 class="mb-3">{{ day }} Schedule</h5>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px">Period</th>
+                                    <th>Class</th>
+                                    <th>Section</th>
+                                    <th style="width: 120px">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for period in range(1, 9) %}
+                                <tr data-day="{{ day }}" data-period="{{ period }}">
+                                    <td class="text-center">{{ period }}</td>
+                                    <td>
+                                        <select class="form-select class-select">
+                                            <option value="">Select Class</option>
+                                            <option value="Free" {% if schedule[day][period-1] and schedule[day][period-1]['is_free'] %}selected{% endif %}>Free Period</option>
+                                            {% for class_num in range(1, 13) %}
+                                                <option value="{{ class_num }}" {% if schedule[day][period-1] and schedule[day][period-1]['class'] == class_num|string %}selected{% endif %}>Class {{ class_num }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select class="form-select section-select" {% if not schedule[day][period-1] or schedule[day][period-1]['is_free'] %}disabled{% endif %}>
+                                            <option value="">Select Section</option>
+                                            {% for section in ['A', 'B', 'C', 'D', 'E', 'F'] %}
+                                                <option value="{{ section }}" {% if schedule[day][period-1] and schedule[day][period-1]['section'] == section %}selected{% endif %}>Section {{ section }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger clear-period">
+                                            <i class="fas fa-times"></i> Clear
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4 text-end">
+                <button type="button" class="btn btn-secondary me-2" id="cancelSchedule">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Schedule</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% else %}
+<!-- Teacher Information Form -->
+<div class="card shadow">
+    <div class="card-header bg-dark">
+        <h5 class="mb-0"><i class="fas fa-user me-2"></i>Teacher Information</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin_routes.edit_teacher', teacher_id=teacher.id) if teacher else url_for('admin_routes.add_teacher') }}">
+            {{ form.hidden_tag() }}
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="name" class="form-label">Full Name</label>
+                    {{ form.name(class="form-control", placeholder="Enter full name") }}
+                    {% if form.name.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.name.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="teacher_id" class="form-label">Teacher ID</label>
+                    {{ form.teacher_id(class="form-control", placeholder="Enter teacher ID") }}
+                    {% if form.teacher_id.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.teacher_id.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email</label>
+                    {{ form.email(class="form-control", placeholder="Enter email address") }}
+                    {% if form.email.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.email.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label for="phone" class="form-label">Phone Number</label>
+                    {{ form.phone(class="form-control", placeholder="Enter phone number") }}
+                    {% if form.phone.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.phone.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <a href="{{ url_for('admin_routes.teachers') }}" class="btn btn-secondary me-2">Cancel</a>
+                {{ form.submit(class="btn btn-primary") }}
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% if teacher and request.path.endswith('/schedule/' ~ teacher.id) %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Handle "Free Period" selection
+        const classSelects = document.querySelectorAll('.class-select');
+        classSelects.forEach(select => {
+            select.addEventListener('change', function() {
+                const row = this.closest('tr');
+                const sectionSelect = row.querySelector('.section-select');
+
+                if (this.value === 'Free') {
+                    sectionSelect.value = '';
+                    sectionSelect.disabled = true;
+                } else {
+                    sectionSelect.disabled = false;
+                }
+            });
+        });
+
+        // Handle clear period button
+        const clearButtons = document.querySelectorAll('.clear-period');
+        clearButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                const classSelect = row.querySelector('.class-select');
+                const sectionSelect = row.querySelector('.section-select');
+
+                classSelect.value = '';
+                sectionSelect.value = '';
+                sectionSelect.disabled = true;
+            });
+        });
+
+        // Handle form submission
+        const form = document.getElementById('scheduleForm');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Collect routine data
+            const routineData = {};
+            const days = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5'];
+
+            days.forEach(day => {
+                routineData[day] = [];
+
+                for (let period = 1; period <= 8; period++) {
+                    const row = document.querySelector(`tr[data-day="${day}"][data-period="${period}"]`);
+                    const classSelect = row.querySelector('.class-select');
+                    const sectionSelect = row.querySelector('.section-select');
+
+                    if (classSelect.value) {
+                        routineData[day].push({
+                            class: classSelect.value,
+                            section: classSelect.value === 'Free' ? '' : sectionSelect.value,
+                            is_free: classSelect.value === 'Free'
+                        });
+                    } else {
+                        routineData[day].push(null);
+                    }
+                }
+            });
+
+            // Set the hidden input value
+            document.getElementById('routineData').value = JSON.stringify(routineData);
+
+            // Submit the form
+            form.submit();
+        });
+
+        // Handle cancel button
+        document.getElementById('cancelSchedule').addEventListener('click', function() {
+            window.location.href = "{{ url_for('admin_routes.teachers') }}";
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}

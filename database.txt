@@ -1,0 +1,415 @@
+-- =================================================================
+-- SCHOOL MANAGEMENT SYSTEM - COMPLETE DATABASE SCHEMA
+-- =================================================================
+-- This file contains the complete SQL schema for the school management system
+-- Generated from PostgreSQL database structure
+-- =================================================================
+
+-- Table 1: USER
+-- Purpose: Stores user authentication data and links to teacher profiles
+-- =================================================================
+CREATE TABLE "user" (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(64) UNIQUE NOT NULL,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    password_hash VARCHAR(256) NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'teacher',
+    teacher_id INTEGER,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Key Constraints
+    CONSTRAINT fk_user_teacher_id FOREIGN KEY (teacher_id) REFERENCES teacher(id)
+);
+
+-- Indexes for USER table
+CREATE UNIQUE INDEX idx_user_username ON "user"(username);
+CREATE UNIQUE INDEX idx_user_email ON "user"(email);
+CREATE INDEX idx_user_role ON "user"(role);
+CREATE INDEX idx_user_teacher_id ON "user"(teacher_id);
+
+-- =================================================================
+
+-- Table 2: TEACHER
+-- Purpose: Stores teacher profile information and contact details
+-- =================================================================
+CREATE TABLE teacher (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(64) NOT NULL,
+    teacher_id VARCHAR(20) UNIQUE NOT NULL,
+    phone VARCHAR(20) NOT NULL,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for TEACHER table
+CREATE UNIQUE INDEX idx_teacher_teacher_id ON teacher(teacher_id);
+CREATE UNIQUE INDEX idx_teacher_email ON teacher(email);
+CREATE INDEX idx_teacher_name ON teacher(name);
+
+-- =================================================================
+
+-- Table 3: TEACHER_ROUTINE
+-- Purpose: Stores weekly schedules for teachers including class assignments
+-- =================================================================
+CREATE TABLE teacher_routine (
+    id SERIAL PRIMARY KEY,
+    teacher_id INTEGER NOT NULL,
+    day VARCHAR(10) NOT NULL,
+    period INTEGER NOT NULL,
+    class_name VARCHAR(20) NOT NULL,
+    section VARCHAR(10),
+    is_free BOOLEAN DEFAULT FALSE,
+    
+    -- Foreign Key Constraints
+    CONSTRAINT fk_teacher_routine_teacher_id FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE CASCADE,
+    
+    -- Unique Constraints
+    CONSTRAINT unique_teacher_schedule UNIQUE (teacher_id, day, period)
+);
+
+-- Indexes for TEACHER_ROUTINE table
+CREATE INDEX idx_teacher_routine_teacher_id ON teacher_routine(teacher_id);
+CREATE INDEX idx_teacher_routine_day ON teacher_routine(day);
+CREATE INDEX idx_teacher_routine_period ON teacher_routine(period);
+CREATE INDEX idx_teacher_routine_is_free ON teacher_routine(is_free);
+CREATE INDEX idx_teacher_routine_day_period ON teacher_routine(day, period);
+
+-- =================================================================
+
+-- Table 4: ABSENCE
+-- Purpose: Records teacher absences for substitution planning
+-- =================================================================
+CREATE TABLE absence (
+    id SERIAL PRIMARY KEY,
+    teacher_id INTEGER NOT NULL,
+    date DATE NOT NULL,
+    day VARCHAR(10) NOT NULL,
+    reported_by VARCHAR(20) NOT NULL DEFAULT 'admin',
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Key Constraints
+    CONSTRAINT fk_absence_teacher_id FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE CASCADE,
+    
+    -- Unique Constraints
+    CONSTRAINT unique_teacher_absence UNIQUE (teacher_id, date)
+);
+
+-- Indexes for ABSENCE table
+CREATE INDEX idx_absence_teacher_id ON absence(teacher_id);
+CREATE INDEX idx_absence_date ON absence(date);
+CREATE INDEX idx_absence_day ON absence(day);
+CREATE INDEX idx_absence_reported_by ON absence(reported_by);
+CREATE INDEX idx_absence_teacher_date ON absence(teacher_id, date);
+
+-- =================================================================
+
+-- Table 5: SUBSTITUTION
+-- Purpose: Records substitution assignments when teachers are absent
+-- =================================================================
+CREATE TABLE substitution (
+    id SERIAL PRIMARY KEY,
+    original_teacher_id INTEGER NOT NULL,
+    teacher_id INTEGER NOT NULL,
+    date DATE NOT NULL,
+    day VARCHAR(10) NOT NULL,
+    period INTEGER NOT NULL,
+    class_name VARCHAR(20) NOT NULL,
+    section VARCHAR(10),
+    created_at TIMESTAMP WITHOUT TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Foreign Key Constraints
+    CONSTRAINT fk_substitution_original_teacher_id FOREIGN KEY (original_teacher_id) REFERENCES teacher(id) ON DELETE CASCADE,
+    CONSTRAINT fk_substitution_teacher_id FOREIGN KEY (teacher_id) REFERENCES teacher(id) ON DELETE CASCADE
+);
+
+-- Indexes for SUBSTITUTION table
+CREATE INDEX idx_substitution_original_teacher_id ON substitution(original_teacher_id);
+CREATE INDEX idx_substitution_teacher_id ON substitution(teacher_id);
+CREATE INDEX idx_substitution_date ON substitution(date);
+CREATE INDEX idx_substitution_day ON substitution(day);
+CREATE INDEX idx_substitution_period ON substitution(period);
+CREATE INDEX idx_substitution_date_period ON substitution(date, period);
+CREATE INDEX idx_substitution_teacher_date ON substitution(teacher_id, date);
+
+-- =================================================================
+
+-- Table 6: SUBSTITUTION_TRANSFER
+-- Purpose: Handles requests to transfer substitution assignments between teachers
+-- =================================================================
+CREATE TABLE substitution_transfer (
+    id SERIAL PRIMARY KEY,
+    substitution_id INTEGER NOT NULL,
+    original_teacher_id INTEGER NOT NULL,
+    new_teacher_id INTEGER NOT NULL,
+    reason TEXT NOT NULL,
+    request_date TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    action_date TIMESTAMP WITHOUT TIME ZONE,
+    status VARCHAR(20) NOT NULL DEFAULT 'pending',
+    transfer_all BOOLEAN DEFAULT FALSE,
+    
+    -- Foreign Key Constraints
+    CONSTRAINT fk_substitution_transfer_substitution_id FOREIGN KEY (substitution_id) REFERENCES substitution(id) ON DELETE CASCADE,
+    CONSTRAINT fk_substitution_transfer_original_teacher_id FOREIGN KEY (original_teacher_id) REFERENCES teacher(id) ON DELETE CASCADE,
+    CONSTRAINT fk_substitution_transfer_new_teacher_id FOREIGN KEY (new_teacher_id) REFERENCES teacher(id) ON DELETE CASCADE
+);
+
+-- Indexes for SUBSTITUTION_TRANSFER table
+CREATE INDEX idx_substitution_transfer_substitution_id ON substitution_transfer(substitution_id);
+CREATE INDEX idx_substitution_transfer_original_teacher_id ON substitution_transfer(original_teacher_id);
+CREATE INDEX idx_substitution_transfer_new_teacher_id ON substitution_transfer(new_teacher_id);
+CREATE INDEX idx_substitution_transfer_status ON substitution_transfer(status);
+CREATE INDEX idx_substitution_transfer_request_date ON substitution_transfer(request_date);
+
+-- =================================================================
+-- VIEWS FOR REPORTING AND ANALYTICS
+-- =================================================================
+
+-- View 1: Teacher Schedule Overview
+CREATE VIEW teacher_schedule_overview AS
+SELECT 
+    t.id,
+    t.name,
+    t.teacher_id,
+    tr.day,
+    tr.period,
+    tr.class_name,
+    tr.section,
+    tr.is_free
+FROM teacher t
+LEFT JOIN teacher_routine tr ON t.id = tr.teacher_id
+ORDER BY t.name, 
+    CASE tr.day 
+        WHEN 'Monday' THEN 1 
+        WHEN 'Tuesday' THEN 2 
+        WHEN 'Wednesday' THEN 3 
+        WHEN 'Thursday' THEN 4 
+        WHEN 'Friday' THEN 5 
+        ELSE 6 
+    END, 
+    tr.period;
+
+-- View 2: Current Substitutions
+CREATE VIEW current_substitutions AS
+SELECT 
+    s.id,
+    ot.name AS original_teacher_name,
+    st.name AS substitute_teacher_name,
+    s.date,
+    s.day,
+    s.period,
+    s.class_name,
+    s.section,
+    s.created_at
+FROM substitution s
+JOIN teacher ot ON s.original_teacher_id = ot.id
+JOIN teacher st ON s.teacher_id = st.id
+WHERE s.date >= CURRENT_DATE
+ORDER BY s.date, s.period;
+
+-- View 3: Teacher Workload Summary
+CREATE VIEW teacher_workload_summary AS
+SELECT 
+    t.id,
+    t.name,
+    t.teacher_id,
+    COUNT(tr.id) AS total_periods,
+    COUNT(CASE WHEN tr.is_free = TRUE THEN 1 END) AS free_periods,
+    COUNT(CASE WHEN tr.is_free = FALSE THEN 1 END) AS teaching_periods,
+    COUNT(s.id) AS current_substitutions
+FROM teacher t
+LEFT JOIN teacher_routine tr ON t.id = tr.teacher_id
+LEFT JOIN substitution s ON t.id = s.teacher_id AND s.date >= CURRENT_DATE
+GROUP BY t.id, t.name, t.teacher_id
+ORDER BY t.name;
+
+-- View 4: Absence History
+CREATE VIEW absence_history AS
+SELECT 
+    a.id,
+    t.name AS teacher_name,
+    t.teacher_id,
+    a.date,
+    a.day,
+    a.reported_by,
+    a.created_at,
+    COUNT(s.id) AS substitutions_created
+FROM absence a
+JOIN teacher t ON a.teacher_id = t.id
+LEFT JOIN substitution s ON a.teacher_id = s.original_teacher_id AND a.date = s.date
+GROUP BY a.id, t.name, t.teacher_id, a.date, a.day, a.reported_by, a.created_at
+ORDER BY a.date DESC;
+
+-- =================================================================
+-- STORED PROCEDURES AND FUNCTIONS
+-- =================================================================
+
+-- Function 1: Get Available Teachers for Substitution
+CREATE OR REPLACE FUNCTION get_available_teachers(
+    substitute_day VARCHAR(10),
+    substitute_period INTEGER,
+    exclude_teacher_id INTEGER DEFAULT NULL
+)
+RETURNS TABLE(
+    teacher_id INTEGER,
+    teacher_name VARCHAR(64),
+    teacher_code VARCHAR(20)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        t.id,
+        t.name,
+        t.teacher_id
+    FROM teacher t
+    JOIN teacher_routine tr ON t.id = tr.teacher_id
+    WHERE tr.day = substitute_day 
+        AND tr.period = substitute_period
+        AND tr.is_free = TRUE
+        AND (exclude_teacher_id IS NULL OR t.id != exclude_teacher_id)
+        AND t.id NOT IN (
+            SELECT s.teacher_id 
+            FROM substitution s 
+            WHERE s.day = substitute_day 
+                AND s.period = substitute_period 
+                AND s.date = CURRENT_DATE
+        )
+    ORDER BY t.name;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function 2: Create Substitutions for Absent Teacher
+CREATE OR REPLACE FUNCTION create_substitutions_for_absence(
+    absent_teacher_id INTEGER,
+    absence_date DATE,
+    absence_day VARCHAR(10)
+)
+RETURNS INTEGER AS $$
+DECLARE
+    substitutions_created INTEGER := 0;
+    routine_record RECORD;
+    available_teacher_id INTEGER;
+BEGIN
+    -- Loop through all non-free periods for the absent teacher
+    FOR routine_record IN 
+        SELECT period, class_name, section 
+        FROM teacher_routine 
+        WHERE teacher_id = absent_teacher_id 
+            AND day = absence_day 
+            AND is_free = FALSE
+    LOOP
+        -- Find an available substitute teacher
+        SELECT teacher_id INTO available_teacher_id
+        FROM get_available_teachers(absence_day, routine_record.period, absent_teacher_id)
+        LIMIT 1;
+        
+        -- If an available teacher is found, create substitution
+        IF available_teacher_id IS NOT NULL THEN
+            INSERT INTO substitution (
+                original_teacher_id,
+                teacher_id,
+                date,
+                day,
+                period,
+                class_name,
+                section
+            ) VALUES (
+                absent_teacher_id,
+                available_teacher_id,
+                absence_date,
+                absence_day,
+                routine_record.period,
+                routine_record.class_name,
+                routine_record.section
+            );
+            
+            substitutions_created := substitutions_created + 1;
+        END IF;
+    END LOOP;
+    
+    RETURN substitutions_created;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =================================================================
+-- SAMPLE DATA INSERTION QUERIES
+-- =================================================================
+
+-- Insert Sample Admin User
+INSERT INTO "user" (username, email, password_hash, role) VALUES
+('admin', 'admin@school.edu', 'pbkdf2:sha256:600000$...', 'admin');
+
+-- Insert Sample Teachers
+INSERT INTO teacher (name, teacher_id, phone, email) VALUES
+('John Smith', 'T001', '+1234567890', 'john.smith@school.edu'),
+('Jane Doe', 'T002', '+1234567891', 'jane.doe@school.edu'),
+('Mike Johnson', 'T003', '+1234567892', 'mike.johnson@school.edu'),
+('Sarah Wilson', 'T004', '+1234567893', 'sarah.wilson@school.edu'),
+('David Brown', 'T005', '+1234567894', 'david.brown@school.edu');
+
+-- Insert Sample Teacher Users
+INSERT INTO "user" (username, email, password_hash, role, teacher_id) VALUES
+('jsmith', 'john.smith@school.edu', 'pbkdf2:sha256:600000$...', 'teacher', 1),
+('jdoe', 'jane.doe@school.edu', 'pbkdf2:sha256:600000$...', 'teacher', 2),
+('mjohnson', 'mike.johnson@school.edu', 'pbkdf2:sha256:600000$...', 'teacher', 3),
+('swilson', 'sarah.wilson@school.edu', 'pbkdf2:sha256:600000$...', 'teacher', 4),
+('dbrown', 'david.brown@school.edu', 'pbkdf2:sha256:600000$...', 'teacher', 5);
+
+-- =================================================================
+-- DATABASE MAINTENANCE QUERIES
+-- =================================================================
+
+-- Query to find teachers with most substitutions
+SELECT 
+    t.name,
+    t.teacher_id,
+    COUNT(s.id) as substitution_count
+FROM teacher t
+LEFT JOIN substitution s ON t.id = s.teacher_id
+WHERE s.date >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY t.id, t.name, t.teacher_id
+ORDER BY substitution_count DESC;
+
+-- Query to find teachers with most absences
+SELECT 
+    t.name,
+    t.teacher_id,
+    COUNT(a.id) as absence_count
+FROM teacher t
+LEFT JOIN absence a ON t.id = a.teacher_id
+WHERE a.date >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY t.id, t.name, t.teacher_id
+ORDER BY absence_count DESC;
+
+-- Query to check schedule conflicts
+SELECT 
+    tr1.teacher_id,
+    tr1.day,
+    tr1.period,
+    COUNT(*) as conflict_count
+FROM teacher_routine tr1
+GROUP BY tr1.teacher_id, tr1.day, tr1.period
+HAVING COUNT(*) > 1;
+
+-- =================================================================
+-- PERFORMANCE OPTIMIZATION QUERIES
+-- =================================================================
+
+-- Analyze table statistics
+ANALYZE "user";
+ANALYZE teacher;
+ANALYZE teacher_routine;
+ANALYZE absence;
+ANALYZE substitution;
+ANALYZE substitution_transfer;
+
+-- Vacuum tables for optimal performance
+VACUUM ANALYZE "user";
+VACUUM ANALYZE teacher;
+VACUUM ANALYZE teacher_routine;
+VACUUM ANALYZE absence;
+VACUUM ANALYZE substitution;
+VACUUM ANALYZE substitution_transfer;
+
+-- =================================================================
+-- END OF DATABASE SCHEMA
+-- =================================================================

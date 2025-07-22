@@ -1,0 +1,180 @@
+{% extends layout|default('base.html') %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</h2>
+            <div>
+                <span class="badge bg-primary fs-6 me-2">{{ today }}</span>
+            </div>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Total Teachers</h6>
+                        <h2 class="mb-0">{{ teacher_count }}</h2>
+                    </div>
+                    <i class="fas fa-chalkboard-teacher fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <span>View Details</span>
+                <a href="{{ url_for('admin_routes.teachers') }}" class="text-white">
+                    <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-danger text-white mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Absent Today</h6>
+                        <h2 class="mb-0">{{ absent_count }}</h2>
+                    </div>
+                    <i class="fas fa-user-minus fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <span>Mark Absences</span>
+                <a href="{{ url_for('admin_routes.mark_absence') }}" class="text-white">
+                    <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-success text-white mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Substitutions</h6>
+                        <h2 class="mb-0">{{ substitution_count }}</h2>
+                    </div>
+                    <i class="fas fa-exchange-alt fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <span>View Substitutions</span>
+                <a href="{{ url_for('admin_routes.substitution') }}" class="text-white">
+                    <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark mb-3">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title">Transfer Requests</h6>
+                        <h2 class="mb-0">{{ transfer_requests }}</h2>
+                    </div>
+                    <i class="fas fa-sync-alt fa-3x opacity-50"></i>
+                </div>
+            </div>
+            <div class="card-footer d-flex justify-content-between align-items-center">
+                <span>View Requests</span>
+                <a href="{{ url_for('admin_routes.transfer_requests') }}" class="text-dark">
+                    <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-tasks me-2"></i>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin_routes.add_teacher') }}" class="btn btn-outline-primary d-block p-3">
+                            <i class="fas fa-user-plus fa-2x mb-2"></i><br>
+                            Add New Teacher
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin_routes.mark_absence') }}" class="btn btn-outline-danger d-block p-3">
+                            <i class="fas fa-user-minus fa-2x mb-2"></i><br>
+                            Mark Today's Absences
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin_routes.substitution') }}" class="btn btn-outline-success d-block p-3">
+                            <i class="fas fa-file-alt fa-2x mb-2"></i><br>
+                            View Substitution Plan
+                        </a>
+                    </div>
+                    <div class="col-md-6">
+                        <a href="{{ url_for('admin_routes.history') }}" class="btn btn-outline-info d-block p-3">
+                            <i class="fas fa-history fa-2x mb-2"></i><br>
+                            View History & Logs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header bg-dark">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notifications</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% if transfer_requests > 0 %}
+                        <a href="{{ url_for('admin_routes.transfer_requests') }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-exclamation-circle text-warning me-2"></i>
+                                    <strong>{{ transfer_requests }} pending transfer requests</strong>
+                                </div>
+                                <span class="badge bg-warning text-dark">New</span>
+                            </div>
+                        </a>
+                    {% endif %}
+                    
+                    {% if absent_count > 0 %}
+                        <a href="{{ url_for('admin_routes.substitution') }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-user-minus text-danger me-2"></i>
+                                    <strong>{{ absent_count }} teachers absent today</strong>
+                                </div>
+                                <span class="badge bg-danger">Today</span>
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="list-group-item">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            No absences reported for today.
+                        </div>
+                    {% endif %}
+                    
+                    <div class="list-group-item">
+                        <i class="fas fa-info-circle text-info me-2"></i>
+                        System is running normally.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

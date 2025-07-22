@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-exchange-alt me-2"></i>Substitution Plan</h2>
+            <div>
+                <a href="{{ url_for('admin_routes.mark_absence') }}" class="btn btn-danger me-2">
+                    <i class="fas fa-user-minus me-1"></i> Mark Absences
+                </a>
+                <button id="printSubstitutionBtn" class="btn btn-success">
+                    <i class="fas fa-file-download me-1"></i> Download PDF
+                </button>
+            </div>
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0"><i class="fas fa-calendar-day me-2"></i>Substitution Plan for {{ date }}</h5>
+            </div>
+            <div class="col-md-4">
+                <input type="date" id="dateSelector" class="form-control" value="{{ date }}">
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div id="substitutionContent">
+            {% for period, subs in plan.items() %}
+                <h5 class="mt-4 mb-3">Period {{ period }}</h5>
+                
+                {% if subs %}
+                    <div class="table-responsive">
+                        <table class="table table-bordered substitution-table">
+                            <thead>
+                                <tr class="table-secondary">
+                                    <th>Original Teacher</th>
+                                    <th>Substitute Teacher</th>
+                                    <th>Class</th>
+                                    <th>Section</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in subs %}
+                                    <tr>
+                                        <td>{{ sub.original_teacher }}</td>
+                                        <td>{{ sub.substitute_teacher }}</td>
+                                        <td>{{ sub.class_name }}</td>
+                                        <td>{{ sub.section }}</td>
+                                        <td>
+                                            {% if sub.transfer_requests > 0 %}
+                                                <span class="badge bg-warning text-dark">
+                                                    <i class="fas fa-sync-alt me-1"></i> Transfer Requested
+                                                </span>
+                                            {% else %}
+                                                <button class="btn btn-sm btn-outline-primary edit-substitution" 
+                                                        data-id="{{ sub.id }}">
+                                                    <i class="fas fa-edit me-1"></i> Edit
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No substitutions needed for this period.
+                    </div>
+                {% endif %}
+            {% endfor %}
+            
+            {% if plan.values()|list|length == 0 %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    No substitutions needed for today. All teachers are present!
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Substitution Modal -->
+<div class="modal fade" id="editSubstitutionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Substitution</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editSubstitutionForm">
+                    <input type="hidden" id="substitutionId">
+                    
+                    <div class="mb-3">
+                        <label for="newTeacher" class="form-label">Assign New Teacher</label>
+                        <select class="form-select" id="newTeacher" required>
+                            <option value="">Select Teacher</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">Reason for Change</label>
+                        <textarea class="form-control" id="reason" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveSubstitutionBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/substitution.js') }}?v={{ request.args.get('v', 0) }}"></script>
+<script src="{{ url_for('static', filename='js/pdf_generator.js') }}?v={{ request.args.get('v', 0) }}"></script>
+{% endblock %}

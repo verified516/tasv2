@@ -1,0 +1,425 @@
+/* Custom styles for School Teacher Substitution System */
+
+/* General styling */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.footer {
+    margin-top: auto;
+}
+
+/* Light Mode Specific Styles */
+[data-bs-theme="light"] {
+    --bs-body-bg: #f8f9fa;
+    --bs-body-color: #212529;
+}
+
+[data-bs-theme="light"] .navbar {
+    background-color: #4a89dc !important;
+}
+
+[data-bs-theme="light"] .navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+[data-bs-theme="light"] .navbar-dark .navbar-nav .nav-link:hover,
+[data-bs-theme="light"] .navbar-dark .navbar-nav .nav-link.active {
+    color: #ffffff;
+}
+
+[data-bs-theme="light"] .card {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+[data-bs-theme="light"] .card-header {
+    background-color: #4a89dc;
+    color: white;
+}
+
+/* Animation for theme transition */
+.theme-transition {
+    animation: theme-fade 0.3s ease;
+}
+
+@keyframes theme-fade {
+    0% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+/* Page transitions for SPA-like experience */
+.page-transition-enter {
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.page-transition-exit {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.page-transition-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+/* Add smooth loading indicator */
+.loading-indicator {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to right, var(--bs-primary), var(--bs-info));
+    z-index: 9999;
+    transform-origin: left;
+    animation: loading 1.2s infinite ease-in-out;
+}
+
+@keyframes loading {
+    0% { transform: scaleX(0); opacity: 0.8; }
+    50% { transform: scaleX(0.5); opacity: 1; }
+    100% { transform: scaleX(1); opacity: 0.8; }
+}
+
+/* Fullscreen loader */
+.fullscreen-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    transition: opacity 0.3s ease;
+}
+
+.fullscreen-loader .logo {
+    font-size: 4rem;
+    color: white;
+    margin-bottom: 1rem;
+    animation: bounce 1s infinite alternate;
+}
+
+.fullscreen-loader .spinner {
+    width: 60px;
+    height: 60px;
+    border: 6px solid rgba(255,255,255,0.1);
+    border-left-color: var(--bs-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.fullscreen-loader .message {
+    color: white;
+    margin-top: 1rem;
+    font-size: 1.2rem;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-10px); }
+}
+
+/* Card hover effect */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
+}
+
+.card-footer {
+    border-bottom-left-radius: 1rem !important;
+    border-bottom-right-radius: 1rem !important;
+}
+
+/* Dashboard cards */
+.card .card-footer {
+    transition: background-color 0.3s ease;
+}
+
+.card:hover .card-footer {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Animated icons */
+.fa-sync-alt, .fa-exchange-alt {
+    transition: transform 0.5s ease;
+}
+
+.fa-sync-alt:hover, .fa-exchange-alt:hover {
+    transform: rotate(180deg);
+}
+
+/* Badge styles */
+.badge {
+    font-weight: 500;
+    font-size: 0.85rem;
+    padding: 0.4em 0.7em;
+}
+
+/* Ripple effect for buttons */
+.btn-ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-ripple:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 120px;
+    height: 120px;
+    margin-left: -60px;
+    margin-top: -60px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 100%;
+    transform: scale(0);
+    animation: ripple 0.7s;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Table hover effect */
+.table-hover tbody tr:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+
+/* Custom alert styles */
+.alert {
+    border-radius: 0.5rem;
+    border-left: 5px solid;
+}
+
+.alert-success {
+    border-left-color: var(--bs-success);
+}
+
+.alert-danger {
+    border-left-color: var(--bs-danger);
+}
+
+.alert-warning {
+    border-left-color: var(--bs-warning);
+}
+
+.alert-info {
+    border-left-color: var(--bs-info);
+}
+
+/* Custom form styles */
+.form-control, .form-select, .btn {
+    border-radius: 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+}
+
+.btn {
+    padding: 0.5rem 1.25rem;
+    font-weight: 500;
+}
+
+.btn-primary, .btn-success, .btn-danger, .btn-warning, .btn-info {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.12);
+}
+
+.btn-primary:hover, .btn-success:hover, .btn-danger:hover, .btn-warning:hover, .btn-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:active, .btn-success:active, .btn-danger:active, .btn-warning:active, .btn-info:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Selected teacher list */
+#selectedTeachersList {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#selectedTeachersList .list-group-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Schedule table */
+.table-bordered td, .table-bordered th {
+    border-color: rgba(var(--bs-secondary-rgb), 0.2);
+}
+
+/* Dark mode adjustments */
+/* Theme transition effect */
+.theme-transition * {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+/* Dark mode specific styles */
+[data-bs-theme="dark"] {
+    --card-shadow-color: rgba(0, 0, 0, 0.5);
+    --hover-shadow-color: rgba(0, 0, 0, 0.7);
+}
+
+[data-bs-theme="light"] {
+    --card-shadow-color: rgba(0, 0, 0, 0.1);
+    --hover-shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="dark"] .card {
+    box-shadow: 0 4px 12px var(--card-shadow-color);
+}
+
+[data-bs-theme="dark"] .card:hover {
+    box-shadow: 0 8px 24px var(--hover-shadow-color);
+}
+
+[data-bs-theme="dark"] .table-secondary {
+    --bs-table-bg: rgba(var(--bs-secondary-rgb), 0.2);
+}
+
+[data-bs-theme="dark"] .list-group-item {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+    border-color: rgba(255, 255, 255, 0.15);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+[data-bs-theme="dark"] .form-control:focus, 
+[data-bs-theme="dark"] .form-select:focus {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Animations for modals and alerts */
+.modal.fade .modal-dialog {
+    transition: transform 0.3s ease-out;
+    transform: scale(0.8);
+}
+
+.modal.show .modal-dialog {
+    transform: scale(1);
+}
+
+.alert.show {
+    animation: fadeInDown 0.5s;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .card-header {
+        background-color: #f8f9fa !important;
+        color: #000 !important;
+    }
+    
+    .table-bordered th, .table-bordered td {
+        border-color: #dee2e6 !important;
+    }
+}
+
+/* Notification badge animation */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.badge.bg-warning, .badge.bg-danger {
+    animation: pulse 2s infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(var(--bs-dark-rgb), 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(var(--bs-primary-rgb), 0.6);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(var(--bs-primary-rgb), 0.8);
+}
