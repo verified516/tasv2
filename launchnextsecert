@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Site Uptime</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    #uptime { font-size: 2em; color: #007bff; }
+  </style>
+</head>
+<body>
+  <h1>Site Uptime</h1>
+  <div id="uptime">Calculating...</div>
+
+  <script>
+    // Set your site launch/start date here (UTC)
+    const launchDate = new Date('2025-07-25T08:00:00Z'); // Example: July 25, 2025, 08:00 UTC
+
+    function updateUptime() {
+      const now = new Date();
+      let diff = Math.floor((now - launchDate) / 1000); // seconds
+      
+      const days = Math.floor(diff / (3600 * 24));
+      diff -= days * 3600 * 24;
+      const hours = Math.floor(diff / 3600);
+      diff -= hours * 3600;
+      const minutes = Math.floor(diff / 60);
+      const seconds = diff % 60;
+
+      document.getElementById('uptime').textContent =
+        `${days} days, ${hours} hours, ${minutes} minutes, ${seconds} seconds`;
+    }
+
+    updateUptime();
+    setInterval(updateUptime, 1000); // Update every second
+  </script>
+</body>
+</html>
